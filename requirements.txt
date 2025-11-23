@@ -1,0 +1,11 @@
+gymnasium
+numpy
+torch
+requests
+stable-baselines3
+sb3-contrib
+shimmy
+pandas
+tensorboard
+tqdm
+rich
