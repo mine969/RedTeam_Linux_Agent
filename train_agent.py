@@ -8,6 +8,7 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 from env.advanced_env import AdvancedKillChainEnv
 
 import torch
+import numpy as np
 
 def train_smart_agent():
     print("Initializing Super-Smart Red Team Agent (2025 Edition)...")
