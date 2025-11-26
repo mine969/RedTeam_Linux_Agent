@@ -29,46 +29,46 @@ class AdvancedKillChainEnv(gym.Env):
         # We group actions by Kill Chain phase for logic, but the agent sees a flat list.
         self.actions = [
             # RECON (0-4)
-            "OSINT_AI_Scan",                # 0: Passive AI Recon
-            "Cloud_Metadata_Enum",          # 1: Cloud Bucket/Metadata
-            "Active_Port_Scan_Stealth",     # 2: Low-rate Nmap
-            "Active_Port_Scan_Aggressive",  # 3: Masscan (Noisy)
-            "Phishing_Campaign_Simulation", # 4: Email Vectors
+            "Autonomous_Swarm_Recon",       # 0: Passive AI Recon
+            "MultiCloud_Shadow_API_Enum",   # 1: Cloud Bucket/Metadata
+            "IPv6_Ghost_Scan",              # 2: Low-rate Nmap
+            "Botnet_Distributed_Scan",      # 3: Masscan (Noisy)
+            "Deepfake_Voice_Phishing",      # 4: Email Vectors
             
             # INITIAL ACCESS (5-9)
-            "Exploit_Public_App_CVE_2025",  # 5: Modern Web Exploit
-            "Exploit_VPN_Gateway",          # 6: VPN Vuln
-            "SSH_Brute_Force_Smart",        # 7: Credential Stuffing
-            "USB_Drop_Simulation",          # 8: Physical/Local
-            "Supply_Chain_Compromise",      # 9: Dependency Confusion
+            "ZeroDay_LLM_Injection",        # 5: Modern Web Exploit
+            "Quantum_VPN_Decryption",       # 6: VPN Vuln
+            "Biometric_Spoofing_Auth",      # 7: Credential Stuffing
+            "NFC_Clone_Attack",             # 8: Physical/Local
+            "AI_Model_Poisoning",           # 9: Dependency Confusion
             
             # EXECUTION (10-14)
-            "PowerShell_Obfuscated",        # 10: Windows LOLBin
-            "Bash_Reverse_Shell",           # 11: Linux Standard
-            "Mac_AppleScript_Exec",         # 12: macOS Specific
-            "Linux_LOLBin_GTFO",            # 13: Sudo/Perm abuse
-            "Browser_Exploit_DriveBy",      # 14: Client-side
+            "PowerShell_Reflective_Load",   # 10: Windows LOLBin
+            "eBPF_Stealth_Shell",           # 11: Linux Standard
+            "MacOS_TCC_Bypass",             # 12: macOS Specific
+            "Container_Escape_K8s",         # 13: Sudo/Perm abuse
+            "WASM_Heap_Overflow",           # 14: Client-side
             
             # PERSISTENCE (15-19)
-            "Registry_Run_Keys",            # 15: Windows Persistence
-            "Cron_Job_Hidden",              # 16: Linux Persistence
-            "LaunchAgent_Plist",            # 17: macOS Persistence
-            "WMI_Event_Subscription",       # 18: Windows Advanced
-            "eBPF_Rootkit_Install",         # 19: Linux Kernel Stealth
+            "UEFI_Bootkit_Implant",         # 15: Windows Persistence
+            "Systemd_Service_Masquerade",   # 16: Linux Persistence
+            "MacOS_Kext_Injection",         # 17: macOS Persistence
+            "Hypervisor_Level_Persistence", # 18: Windows Advanced
+            "Hardware_Firmware_Backdoor",   # 19: Linux Kernel Stealth
             
             # PRIVILEGE ESCALATION (20-24)
-            "WinPEAS_Memory_Scan",          # 20: Windows Enum
-            "LinPEAS_Sudo_Check",           # 21: Linux Enum
-            "Kernel_Exploit_DirtyPipe2",    # 22: Linux Kernel
-            "PrintNightmare_v3",            # 23: Windows Service
-            "Keychain_Dump",                # 24: macOS Creds
+            "AD_Kerberos_Ticket_Forge",     # 20: Windows Enum
+            "Linux_Kernel_Race_Condition",  # 21: Linux Enum
+            "ZeroDay_Kernel_PrivEsc",       # 22: Linux Kernel
+            "Windows_Hello_Bypass",         # 23: Windows Service
+            "Secure_Enclave_Extraction",    # 24: macOS Creds
             
             # EXFILTRATION & IMPACT (25-29) - BUSINESS LOGIC
-            "Exfil_Customer_Database",      # 25: $$$ High Value
-            "Exfil_Emails",                 # 26: $$ Medium Value
-            "Ransomware_Encryption",        # 27: $$$ High Impact (Noisy)
-            "Deface_Website",               # 28: $ Low Value (Noisy)
-            "Cover_Tracks_LogWipe",         # 29: Stealth Restore
+            "Exfil_Vector_Embeddings_DB",   # 25: $$$ High Value
+            "Exfil_Executive_Voice_Prints", # 26: $$ Medium Value
+            "Quantum_Ransomware_Crypt",     # 27: $$$ High Impact (Noisy)
+            "Deepfake_CEO_Broadcast",       # 28: $ Low Value (Noisy)
+            "Blockchain_Log_Poisoning",     # 29: Stealth Restore
         ]
         
         self.action_space = spaces.Discrete(len(self.actions))
@@ -158,9 +158,9 @@ class AdvancedKillChainEnv(gym.Env):
             info["output"] = "FAIL: PowerShell not available on " + self.current_os
             return self._get_obs(), reward, done, truncated, info
             
-        if "Bash" in action_name and self.current_os == "Windows":
+        if "eBPF" in action_name and self.current_os == "Windows":
             reward -= 5.0 # Fail command
-            info["output"] = "FAIL: Bash not available on " + self.current_os
+            info["output"] = "FAIL: eBPF not available on " + self.current_os
             return self._get_obs(), reward, done, truncated, info
 
         # 2. Kill Chain Progression Logic
@@ -170,9 +170,9 @@ class AdvancedKillChainEnv(gym.Env):
             if self.state["kill_chain_phase"] == 0:
                 self.state["kill_chain_phase"] = 1 # Advance
                 reward += 1.0 # Small progress reward
-                if "Aggressive" in action_name:
+                if "Botnet" in action_name:
                     self.state["stealth_meter"] -= 20
-                    info["output"] = "Recon successful but noisy."
+                    info["output"] = "Recon successful but noisy (Botnet)."
                 else:
                     info["output"] = "Stealth recon successful."
             else:
@@ -196,7 +196,8 @@ class AdvancedKillChainEnv(gym.Env):
         # EXECUTION & PERSISTENCE
         elif 10 <= action_id <= 19:
             if self.state["access_level"] >= 1:
-                if "Persistence" in action_name:
+                # Actions 15-19 are Persistence
+                if action_id >= 15:
                      reward += 5.0
                      info["output"] = "Persistence established."
                 else:
@@ -221,25 +222,25 @@ class AdvancedKillChainEnv(gym.Env):
         # EXFILTRATION & IMPACT
         elif 25 <= action_id <= 29:
             if self.state["access_level"] >= 1:
-                if "Customer_Database" in action_name:
+                if "Vector_Embeddings" in action_name:
                     if self.state["access_level"] == 2:
                         reward += 100.0 # Find Flag / High Value
                         self.state["business_value_found"] += 100
-                        info["output"] = "CRITICAL: Customer Database Exfiltrated! (+100)"
+                        info["output"] = "CRITICAL: Vector Embeddings DB Exfiltrated! (+100)"
                         done = True # Mission Complete
                     else:
                         reward -= 5.0
                         info["output"] = "Need Root/Admin to access Database."
                 
-                elif "Emails" in action_name:
+                elif "Voice_Prints" in action_name:
                     reward += 30.0
                     self.state["business_value_found"] += 30
-                    info["output"] = "Emails exfiltrated."
+                    info["output"] = "Executive Voice Prints exfiltrated."
                     
                 elif "Ransomware" in action_name:
                     reward += 50.0
                     self.state["stealth_meter"] = 0 # Very Noisy
-                    info["output"] = "Ransomware deployed."
+                    info["output"] = "Quantum Ransomware deployed."
                     done = True
             else:
                 info["output"] = "No access to exfiltrate."
