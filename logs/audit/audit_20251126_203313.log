@@ -1,0 +1,28 @@
+2025-11-26 20:33:13,194 - INFO - Safety Monitor initialized
+2025-11-26 20:33:13,194 - ERROR - ✗ BLOCKED dangerous command: rm -rf /
+2025-11-26 20:33:13,194 - ERROR - ✗ BLOCKED dangerous command: :(){ :|:& };:
+2025-11-26 20:33:13,194 - ERROR - ✗ BLOCKED dangerous command: mkfs.ext4 /dev/sda
+2025-11-26 20:33:13,194 - ERROR - ✗ BLOCKED dangerous command: dd if=/dev/zero of=/dev/sda
+2025-11-26 20:33:13,208 - INFO - Safety Monitor initialized
+2025-11-26 20:33:13,209 - INFO - Safety Monitor initialized
+2025-11-26 20:33:13,209 - INFO - Safety Monitor initialized
+2025-11-26 20:33:13,209 - WARNING - ✗ Port 1337 is not in allowed list - BLOCKED
+2025-11-26 20:33:13,209 - INFO - Safety Monitor initialized
+2025-11-26 20:33:13,209 - INFO - Episode counters reset
+2025-11-26 20:33:13,209 - INFO - [SUCCESS] Action: test_action_0 | Target: 172.20.0.10
+2025-11-26 20:33:13,209 - INFO - [SUCCESS] Action: test_action_1 | Target: 172.20.0.10
+2025-11-26 20:33:13,209 - INFO - [SUCCESS] Action: test_action_2 | Target: 172.20.0.10
+2025-11-26 20:33:13,209 - INFO - [SUCCESS] Action: test_action_3 | Target: 172.20.0.10
+2025-11-26 20:33:13,209 - INFO - [SUCCESS] Action: test_action_4 | Target: 172.20.0.10
+2025-11-26 20:33:13,210 - INFO - Safety Monitor initialized
+2025-11-26 20:33:13,210 - INFO - ✓ Target IP 172.20.0.10 is explicitly whitelisted
+2025-11-26 20:33:13,210 - INFO - Safety Monitor initialized
+2025-11-26 20:33:13,210 - WARNING - ✗ Target IP 8.8.8.8 is NOT in whitelist - BLOCKED
+2025-11-26 20:33:13,210 - INFO - Safety Monitor initialized
+2025-11-26 20:33:13,210 - WARNING - ✗ Target IP 192.168.1.1 is NOT in whitelist - BLOCKED
+2025-11-26 20:33:13,210 - INFO - Safety Monitor initialized
+2025-11-26 20:33:13,210 - WARNING - ✗ Target IP 8.8.8.8 is NOT in whitelist - BLOCKED
+2025-11-26 20:33:13,210 - INFO - ✓ Target IP 172.20.0.10 is explicitly whitelisted
+2025-11-26 20:33:13,211 - INFO - ✓ Target IP 172.20.0.10 is explicitly whitelisted
+2025-11-26 20:33:13,211 - INFO - Executing: nmap -sV -Pn --host-timeout 10s 172.20.0.10
+2025-11-26 20:33:25,961 - INFO - [SUCCESS] Action: nmap -sV | Target: 172.20.0.10
