@@ -63,12 +63,19 @@ class AdvancedKillChainEnv(gym.Env):
             "Windows_Hello_Bypass",         # 23: Windows Service
             "Secure_Enclave_Extraction",    # 24: macOS Creds
             
-            # EXFILTRATION & IMPACT (25-29) - BUSINESS LOGIC
-            "Exfil_Vector_Embeddings_DB",   # 25: $$$ High Value
-            "Exfil_Executive_Voice_Prints", # 26: $$ Medium Value
-            "Quantum_Ransomware_Crypt",     # 27: $$$ High Impact (Noisy)
-            "Deepfake_CEO_Broadcast",       # 28: $ Low Value (Noisy)
-            "Blockchain_Log_Poisoning",     # 29: Stealth Restore
+            # LATERAL MOVEMENT (25-29) - NEW (CyberBattleSim Inspired)
+            "Internal_Subnet_Scan",         # 25: Discover Neighbors
+            "SMB_Pass_The_Hash",            # 26: Pivot Windows
+            "SSH_Key_Hijacking",            # 27: Pivot Linux
+            "WMI_Remote_Exec",              # 28: Lateral Exec
+            "Tunneling_ProxyChains",        # 29: Route Traffic
+            
+            # EXFILTRATION & IMPACT (30-34)
+            "Exfil_Vector_Embeddings_DB",   # 30: $$$ High Value
+            "Exfil_Executive_Voice_Prints", # 31: $$ Medium Value
+            "Quantum_Ransomware_Crypt",     # 32: $$$ High Impact (Noisy)
+            "Deepfake_CEO_Broadcast",       # 33: $ Low Value (Noisy)
+            "Blockchain_Log_Poisoning",     # 34: Stealth Restore
         ]
         
         self.action_space = spaces.Discrete(len(self.actions))
@@ -77,11 +84,12 @@ class AdvancedKillChainEnv(gym.Env):
         # We use a Dict space for structured "Human-like" understanding
         self.observation_space = spaces.Dict({
             "os_type": spaces.Discrete(3),          # 0:Linux, 1:Win, 2:Mac
-            "kill_chain_phase": spaces.Discrete(7), # 0:Recon -> 6:Impact
+            "kill_chain_phase": spaces.Discrete(8), # 0:Recon -> 7:Impact (Added Lateral)
             "stealth_meter": spaces.Box(low=0, high=100, shape=(1,), dtype=np.float32), # 100=Invisible, 0=Detected
             "access_level": spaces.Discrete(3),     # 0:None, 1:User, 2:Root/Admin
             "vulns_known": spaces.MultiBinary(5),   # Bitmask of known vulns
-            "business_value_found": spaces.Box(low=0, high=1000, shape=(1,), dtype=np.float32)
+            "business_value_found": spaces.Box(low=0, high=1000, shape=(1,), dtype=np.float32),
+            "lateral_nodes_found": spaces.Discrete(5) # Number of internal nodes found
         })
         
         # Internal State
@@ -92,9 +100,19 @@ class AdvancedKillChainEnv(gym.Env):
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         
-        # Randomize Target
-        self.current_os_idx = random.randint(0, 2)
-        self.current_os = self.os_types[self.current_os_idx]
+        # Default to random if no options provided
+        if options and 'os_type' in options:
+            self.current_os = options['os_type']
+            if self.current_os in self.os_types:
+                self.current_os_idx = self.os_types.index(self.current_os)
+            else:
+                self.current_os_idx = 0 # Default to Linux
+        else:
+            # Randomize Target
+            self.current_os_idx = random.randint(0, 2)
+            self.current_os = self.os_types[self.current_os_idx]
+            
+        self.target_ip = options.get('target_ip', '127.0.0.1') if options else '127.0.0.1'
         
         # Reset State
         self.state = {
@@ -103,7 +121,8 @@ class AdvancedKillChainEnv(gym.Env):
             "stealth_meter": 100.0,
             "access_level": 0,
             "vulns_known": np.zeros(5, dtype=np.int8),
-            "business_value_found": 0.0
+            "business_value_found": 0.0,
+            "lateral_nodes_found": 0
         }
         
         self.current_step = 0
@@ -116,7 +135,8 @@ class AdvancedKillChainEnv(gym.Env):
             "stealth_meter": np.array([self.state["stealth_meter"]], dtype=np.float32),
             "access_level": self.state["access_level"],
             "vulns_known": self.state["vulns_known"],
-            "business_value_found": np.array([self.state["business_value_found"]], dtype=np.float32)
+            "business_value_found": np.array([self.state["business_value_found"]], dtype=np.float32),
+            "lateral_nodes_found": self.state["lateral_nodes_found"]
         }
 
     def step(self, action_id):
@@ -137,7 +157,8 @@ class AdvancedKillChainEnv(gym.Env):
             self.state["kill_chain_phase"],
             self.state["access_level"],
             tuple(self.state["vulns_known"]),
-            self.state["stealth_meter"] // 10 # Discretize stealth for hashing
+            self.state["stealth_meter"] // 10, # Discretize stealth for hashing
+            self.state["lateral_nodes_found"]
         ))
         
         if not hasattr(self, "state_visits"):
@@ -219,8 +240,37 @@ class AdvancedKillChainEnv(gym.Env):
             else:
                 info["output"] = "Need user access first."
 
-        # EXFILTRATION & IMPACT
+        # LATERAL MOVEMENT (New Phase)
         elif 25 <= action_id <= 29:
+            if self.state["access_level"] >= 1: # Need at least user access
+                if "Subnet_Scan" in action_name:
+                    if self.state["lateral_nodes_found"] == 0:
+                        self.state["lateral_nodes_found"] = random.randint(1, 3)
+                        reward += 20.0
+                        info["output"] = f"Network Scan: Found {self.state['lateral_nodes_found']} internal hosts."
+                    else:
+                        info["output"] = "Network already scanned."
+                
+                elif "Pass_The_Hash" in action_name or "Key_Hijacking" in action_name:
+                    if self.state["lateral_nodes_found"] > 0:
+                        if random.random() > 0.5:
+                            reward += 40.0
+                            info["output"] = "Lateral Movement Successful! Compromised internal node."
+                        else:
+                            self.state["stealth_meter"] -= 10
+                            info["output"] = "Lateral move failed."
+                    else:
+                        info["output"] = "No internal nodes found to pivot to."
+                
+                elif "Tunneling" in action_name:
+                    reward += 10.0
+                    info["output"] = "ProxyChain established."
+            else:
+                reward -= 5.0
+                info["output"] = "Need access to pivot."
+
+        # EXFILTRATION & IMPACT
+        elif 30 <= action_id <= 34:
             if self.state["access_level"] >= 1:
                 if "Vector_Embeddings" in action_name:
                     if self.state["access_level"] == 2:
@@ -255,5 +305,6 @@ class AdvancedKillChainEnv(gym.Env):
         if self.current_step >= self.max_steps:
             reward -= 5.0 # Timeout
             truncated = True
-
+            
         return self._get_obs(), reward, done, truncated, info
+

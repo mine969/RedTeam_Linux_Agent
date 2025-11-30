@@ -58,8 +58,8 @@ def train_smart_agent():
     
     # Train
     # In a real scenario, this would be 1,000,000+ steps
-    # For demo/initial setup, we run 10,000
-    total_timesteps = 10000
+    # For demo/initial setup, we run 100,000
+    total_timesteps = 100000
     
     checkpoint_callback = CheckpointCallback(
         save_freq=1000,
