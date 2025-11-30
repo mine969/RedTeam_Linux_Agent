@@ -1,0 +1,68 @@
+services:
+  # Vulnerable SSH Server - Simple target for initial testing
+  vulnerable-ssh:
+    image: linuxserver/openssh-server:latest
+    container_name: redteam_target_ssh
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Bangkok
+      - PASSWORD_ACCESS=true
+      - USER_PASSWORD=password123
+      - USER_NAME=admin
+    ports:
+      - "2222:2222"
+    networks:
+      pentest_net:
+        ipv4_address: 172.20.0.10
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2222"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Vulnerable Web Server - For web exploitation practice
+  vulnerable-web:
+    image: vulnerables/web-dvwa:latest
+    container_name: redteam_target_web
+    ports:
+      - "8080:80"
+    networks:
+      pentest_net:
+        ipv4_address: 172.20.0.11
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Metasploitable-like vulnerable Linux server
+  vulnerable-linux:
+    image: tleemcjr/metasploitable2:latest
+    container_name: redteam_target_linux
+    ports:
+      - "2223:22"
+      - "8081:80"
+      - "21:21"
+      - "23:23"
+    networks:
+      pentest_net:
+        ipv4_address: 172.20.0.12
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+    privileged: false # Security: Don't give full privileges
+
+networks:
+  pentest_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+    driver_opts:
+      com.docker.network.bridge.name: pentest_br0
+      # Isolate from external network for safety
+      com.docker.network.bridge.enable_ip_masquerade: "false"
