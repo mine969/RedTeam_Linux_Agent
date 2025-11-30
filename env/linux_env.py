@@ -85,7 +85,7 @@ class LinuxSecEnv(gym.Env):
         reward = -1.0 # Time penalty
         done = False
         truncated = False
-        info = {"action": self.actions[action_id]}
+        info = {"action": self.actions[action_id], "output": "No output."}
         
         # --- LOGIC ENGINE ---
         

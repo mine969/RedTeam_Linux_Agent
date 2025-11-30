@@ -34,20 +34,20 @@ class ReportGenerator:
         
         os.makedirs("reports", exist_ok=True)
         
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf-8") as f:
             # Header
-            f.write(f"# 🛡️ Penetration Test Report: {self.target_name}\n")
+            f.write(f"# Penetration Test Report: {self.target_name}\n")
             f.write(f"**Date:** {datetime.datetime.now().strftime('%Y-%m-%d')}\n")
-            f.write(f"**Agent:** RedTeam-Linux-v1\n")
+            f.write(f"**Agent:** RedTeam-Linux-v2\n")
             f.write("---\n\n")
             
             # Executive Summary
             f.write("## 1. Executive Summary\n")
             if any(v['severity'] == "CRITICAL" for v in self.vulns_found):
-                f.write("🔴 **Status: COMPROMISED**\n")
+                f.write("**Status: COMPROMISED**\n")
                 f.write("The target system was successfully compromised. Root access was achieved.\n")
             else:
-                f.write("🟢 **Status: SECURE**\n")
+                f.write("**Status: SECURE**\n")
                 f.write("No critical vulnerabilities were exploited during this session.\n")
             f.write("\n")
             
@@ -57,8 +57,7 @@ class ReportGenerator:
                 f.write("*No vulnerabilities found.*\n")
             else:
                 for v in self.vulns_found:
-                    icon = "🔴" if v['severity'] == "CRITICAL" else "🟠" if v['severity'] == "HIGH" else "🔵"
-                    f.write(f"### {icon} {v['type']} ({v['severity']})\n")
+                    f.write(f"### {v['type']} ({v['severity']})\n")
                     f.write(f"{v['description']}\n\n")
             
             # Attack Log
